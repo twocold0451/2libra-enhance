@@ -146,7 +146,7 @@
                 const css = `
                     header, .navbar, footer, aside, .menu, [role="banner"], [role="contentinfo"] { display: none !important; }
                     div.flex.items-center.justify-between { display: none !important; }
-                    [data-main-left="true"], .flex-1, .w-full {
+                    [data-main-left="true"], .flex-1 {
                         position: fixed !important; top: 0 !important; left: 0 !important;
                         width: 100vw !important; height: 100vh !important;
                         z-index: 2147483647 !important; background: var(--base-100, #fff) !important;

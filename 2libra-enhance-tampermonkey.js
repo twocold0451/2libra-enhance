@@ -241,7 +241,7 @@
                 const css = `
                     header, .navbar, footer, aside, .menu, [role="banner"], [role="contentinfo"] { display: none !important; }
                     div.flex.items-center.justify-between { display: none !important; }
-                    [data-main-left="true"], .flex-1, .w-full {
+                    [data-main-left="true"], .flex-1 {
                         position: fixed !important;
                         top: 0 !important;
                         left: 0 !important;
