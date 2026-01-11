@@ -15,11 +15,11 @@
 2. 点击 "安装此脚本"
 3. 脚本会自动在Tampermonkey中打开，点击保存
 
-#### 手动安装
+#### GitHub 直接安装
 1.  **安装扩展**：确保你的浏览器已安装 [Tampermonkey](https://www.tampermonkey.net/) 扩展 (Chrome / Edge / Firefox)。
 2.  **安装脚本**：
-    *   打开 Tampermonkey 管理面板 -> 添加新脚本。
-    *   将 [2libra-enhance-tampermonkey.js](./2libra-enhance-tampermonkey.js) 的内容复制粘贴进去 -> 保存。
+    *   点击 [2libra-enhance-tampermonkey.user.js](https://raw.githubusercontent.com/twocold0451/2libra-enhance/main/2libra-enhance-tampermonkey.user.js) 链接。
+    *   Tampermonkey 会自动识别并提示安装，点击“安装”即可。
 3.  **开始使用**：刷新 2libra.com 页面即可生效。
 
 ### 方式二：Chrome / Edge 开发者模式 (本地加载)
@@ -45,7 +45,7 @@
 
 *   **manifest.json**: 浏览器扩展的配置文件 (Manifest V3)。
 *   **content.js**: 浏览器扩展的核心逻辑代码。
-*   **2libra-enhance-tampermonkey.js**: Tampermonkey 油猴脚本，逻辑与 content.js 保持同步。
+*   **2libra-enhance-tampermonkey.user.js**: Tampermonkey 油猴脚本，逻辑与 content.js 保持同步。
 
 ---
 Author: [twocold0451](https://github.com/twocold0451)  

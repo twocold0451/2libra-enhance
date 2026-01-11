@@ -86,14 +86,14 @@
         #${CONFIG.modalId}.active { opacity: 1; pointer-events: auto; }
         #${CONFIG.modalId} .modal-content {
             width: 90%; max-width: 1000px; height: 90%;
-            background: var(--base-100, #fff); border-radius: 12px;
+            background: var(--base-100, var(--libra-dynamic-bg, #fff)); border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
         #${CONFIG.modalId} .modal-header {
             padding: 10px 20px; border-bottom: 1px solid rgba(0,0,0,0.1);
             display: flex; justify-content: space-between; align-items: center;
-            background: var(--base-200, #f0f0f0);
+            background: var(--base-100, var(--libra-dynamic-bg, #fff));
         }
         #${CONFIG.modalId} .modal-title { font-weight: bold; font-size: 16px; }
         #${CONFIG.modalId} .modal-actions { display: flex; gap: 12px; align-items: center; }
@@ -105,7 +105,7 @@
             padding: 6px 16px; background-color: #e5e7eb;
             color: #374151; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;
         }
-        #${CONFIG.modalId} iframe { width: 100%; height: 100%; border: none; background: var(--base-100, #fff); }
+        #${CONFIG.modalId} iframe { width: 100%; height: 100%; border: none; background: transparent; opacity: 0; transition: opacity 0.3s; }
     `;
     document.head.appendChild(style);
 
@@ -133,24 +133,37 @@
     function openModal(url, title) {
         createModal();
         const modal = document.getElementById(CONFIG.modalId);
+        
+        // 动态获取网页背景色，解决变量未定义导致的透明问题
+        let bg = window.getComputedStyle(document.body).backgroundColor;
+        if (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') {
+            bg = window.getComputedStyle(document.documentElement).backgroundColor;
+        }
+        modal.style.setProperty('--libra-dynamic-bg', bg);
+
         const iframe = document.getElementById(CONFIG.iframeId);
         const goBtn = modal.querySelector('.btn-go-thread');
+
+        iframe.style.backgroundColor = bg; // 防止加载时闪烁白色
+        iframe.style.opacity = '0'; // 初始隐藏，防止白屏和未净化内容的闪烁
+        
         iframe.src = url;
         modal.querySelector('.modal-title').textContent = title || '快速预览';
         goBtn.onclick = () => { window.location.href = url; };
         modal.classList.add('active');
         document.body.style.overflow = 'hidden'; 
+
         iframe.onload = () => {
             try {
                 const doc = iframe.contentDocument;
                 const css = `
                     header, .navbar, aside:not(.EmojiPickerReact), .menu:not(.dropdown-left), [role="banner"], [role="contentinfo"], footer.footer-center { display: none !important; }
-                	div.breadcrumbs.text-sm.overflow-visible { display: none !important; }
+                    div.breadcrumbs.text-sm.overflow-visible { display: none !important; }
                     [data-main-left="true"], .flex-1 {
                         position: fixed !important; top: 0 !important; left: 0 !important;
                         width: 100vw !important; height: 100vh !important;
-                        z-index: 2147483640 !important; background: var(--base-100, #fff) !important;
-                        overflow-y: auto !important; padding: 20px !important; margin: 0 !important; border: none !important;
+                        z-index: 2147483640 !important; background: var(--base-100, ${bg}) !important;
+                        overflow-y: auto !important; padding: 0 20px 20px 20px !important; margin: 0 !important; border: none !important;
                     }
                     .EmojiPickerReact { z-index: 2147483647 !important; }
                     body, html { overflow: hidden !important; }
@@ -158,7 +171,13 @@
                 const style = doc.createElement('style');
                 style.textContent = css;
                 doc.head.appendChild(style);
-            } catch (e) {}
+                
+                // 样式注入完成后显示内容
+                iframe.style.opacity = '1';
+            } catch (e) {
+                // 出错也显示，避免死锁
+                iframe.style.opacity = '1';
+            }
         };
     }
 
@@ -176,8 +195,7 @@
         if (!li || li.dataset.libraQuickBtnAdded) return;
         const timeEl = li.querySelector('time');
         if (!timeEl) return;
-        const metaRow = timeEl.parentElement;
-        const titleLink = metaRow ? metaRow.previousElementSibling : null;
+        const titleLink = timeEl.parentElement.parentElement.querySelector('a.link');
         if (!titleLink || titleLink.tagName !== 'A') return;
         li.dataset.libraQuickBtnAdded = 'true';
         li.classList.add('libra-post-item');
