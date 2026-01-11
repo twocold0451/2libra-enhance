@@ -144,14 +144,15 @@
             try {
                 const doc = iframe.contentDocument;
                 const css = `
-                    header, .navbar, footer, aside, .menu, [role="banner"], [role="contentinfo"] { display: none !important; }
-                    div.flex.items-center.justify-between { display: none !important; }
+                    header, .navbar, aside:not(.EmojiPickerReact), .menu:not(.dropdown-left), [role="banner"], [role="contentinfo"], footer.footer-center { display: none !important; }
+                	div.breadcrumbs.text-sm.overflow-visible { display: none !important; }
                     [data-main-left="true"], .flex-1 {
                         position: fixed !important; top: 0 !important; left: 0 !important;
                         width: 100vw !important; height: 100vh !important;
-                        z-index: 2147483647 !important; background: var(--base-100, #fff) !important;
+                        z-index: 2147483640 !important; background: var(--base-100, #fff) !important;
                         overflow-y: auto !important; padding: 20px !important; margin: 0 !important; border: none !important;
                     }
+                    .EmojiPickerReact { z-index: 2147483647 !important; }
                     body, html { overflow: hidden !important; }
                 `;
                 const style = doc.createElement('style');
