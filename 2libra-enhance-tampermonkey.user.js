@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         2libra-enhance
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  2libra.com 论坛增强：帖子快速查看、智能返回顶部
 // @author       twocold0451
 // @homepage     https://github.com/twocold0451/2libra-enhance
@@ -260,7 +260,7 @@
         /* 自定义返回顶部按钮 */
         #custom-back-to-top {
             position: fixed;
-            z-index: 9990;
+            z-index: 900;
             width: 48px;
             height: 48px;
             border-radius: 14px; /* 更加圆润的矩形，类似 iOS 风格 */
@@ -310,7 +310,7 @@
             width: 100vw;
             height: 100vh;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
+            z-index: 900;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -547,32 +547,55 @@
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        iframe.onload = () => {
+                iframe.onload = () => {
             try {
                 const doc = iframe.contentDocument;
                 const css = `
                     header, .navbar, aside:not(.EmojiPickerReact), .menu:not(.dropdown-left), [role="banner"], [role="contentinfo"], footer.footer-center { display: none !important; }
                     div.breadcrumbs.text-sm.overflow-visible { display: none !important; }
                     [data-main-left="true"], .flex-1 {
-                        position: fixed !important; 
-                        top: 0 !important; 
+                        position: fixed !important;
+                        top: 0 !important;
                         left: 0 !important;
-                        width: 100vw !important; 
+                        width: 100vw !important;
                         height: 100vh !important;
-                        z-index: 2147483640 !important; 
+                        z-index: 900 !important;
                         background: var(--base-100, ${bg}) !important;
-                        overflow-y: auto !important; 
+                        overflow-y: auto !important;
                         padding: 0 20px 20px 20px !important;
                         margin: 0 !important;
                         border: none !important;
                     }
-                    .EmojiPickerReact { z-index: 2147483647 !important; }
+                    .EmojiPickerReact { z-index: 900 !important; }
+                    .medium-zoom-overlay { z-index: 900 !important; }
                     body, html { overflow: hidden !important; }
                 `;
                 const style = doc.createElement('style');
                 style.textContent = css;
                 doc.head.appendChild(style);
-                
+
+                // 自动滚动到弹窗顶部
+                function scrollToTop() {
+                    console.log('2libra-enhance: Scrolling to top');
+                    const mainContent = doc.querySelector('[data-main-left="true"]') || doc.querySelector('.flex-1');
+                    if (mainContent) {
+                        mainContent.scrollTop = 0;
+                    } else {
+                        doc.documentElement.scrollTop = 0;
+                    }
+                }
+
+                // 监听URL变化，自动滚动到顶部
+                const win = iframe.contentWindow;
+
+                // 重写pushState和replaceState
+                const originalPushState = win.history.pushState;
+                win.history.pushState = function(state, title, url) {
+                    console.log('2libra-enhance: pushState triggered, new URL:', url);
+                    originalPushState.apply(this, arguments);
+                    scrollToTop();
+                };
+
                 // 样式注入完成后隐藏加载占位符并显示内容
                 if (loadingEl) loadingEl.style.display = 'none';
                 iframe.style.opacity = '1';
