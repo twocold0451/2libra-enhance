@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "2libra-enhance",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "2libra.com 论坛增强插件：帖子快速预览",
   "permissions": ["activeTab"],
   "content_scripts": [

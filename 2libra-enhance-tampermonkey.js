@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         2libra-enhance
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  2libra.com 论坛增强：帖子快速预览、智能返回顶部
 // @author       twocold0451
 // @homepage     https://github.com/twocold0451/2libra-enhance
@@ -241,7 +241,7 @@
                 const doc = iframe.contentDocument;
                 const css = `
                     header, .navbar, aside:not(.EmojiPickerReact), .menu:not(.dropdown-left), [role="banner"], [role="contentinfo"], footer.footer-center { display: none !important; }
-                    div.flex.items-center.justify-between { display: none !important; }
+                    div.breadcrumbs.text-sm.overflow-visible { display: none !important; }
                     [data-main-left="true"], .flex-1 {
                         position: fixed !important;
                         top: 0 !important;
