@@ -2,13 +2,18 @@
 // @name         2libra-enhance
 // @namespace    http://tampermonkey.net/
 // @version      1.2
-// @description  2libra.com 论坛增强：帖子快速预览、智能返回顶部
+// @description  2libra.com 论坛增强：帖子快速查看、智能返回顶部
 // @author       twocold0451
 // @homepage     https://github.com/twocold0451/2libra-enhance
 // @supportURL   https://github.com/twocold0451/2libra-enhance/issues
 // @match        https://2libra.com/*
 // @license MIT
-// @grant        none
+// @grant        GM_registerMenuCommand
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_unregisterMenuCommand
+// @grant        GM_addValueChangeListener
+// @require      https://github.com/PRO-2684/GM_config/releases/download/v1.2.2/config.min.js
 // ==/UserScript==
 
 (function() {
@@ -21,12 +26,206 @@
     const CONFIG = {
         btnText: '快速查看',
         modalId: 'libra-quick-view-modal',
-        iframeId: 'libra-quick-view-iframe'
+        iframeId: 'libra-quick-view-iframe',
+        settingsKey: 'libra-click-title-quick-view',
+        settingsModalId: 'libra-settings-modal'
     };
+
+    // 设置管理 - 将在GM_config初始化后设置
+    let Settings;
 
     // 样式注入
     const style = document.createElement('style');
     style.textContent = `
+        /* SpinKit CSS */
+        @keyframes sk-chase {
+          100% { transform: rotate(360deg); }
+        }
+
+        .sk-chase {
+          width: 40px;
+          height: 40px;
+          position: relative;
+          animation: sk-chase 2.0s infinite linear both;
+        }
+
+        .sk-chase-dot {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          left: 0;
+          top: 0;
+          animation: sk-chase 2.0s infinite ease-in-out both;
+        }
+
+        .sk-chase-dot:before {
+          content: '';
+          display: block;
+          width: 25%;
+          height: 25%;
+          background-color: var(--color-primary, #4a00ff);
+          border-radius: 100%;
+          animation: sk-chase-dot 2.0s infinite ease-in-out both;
+        }
+
+        .sk-chase-dot:nth-child(1) { animation-delay: -1.1s; }
+        .sk-chase-dot:nth-child(2) { animation-delay: -1.0s; }
+        .sk-chase-dot:nth-child(3) { animation-delay: -0.9s; }
+        .sk-chase-dot:nth-child(4) { animation-delay: -0.8s; }
+        .sk-chase-dot:nth-child(5) { animation-delay: -0.7s; }
+        .sk-chase-dot:nth-child(6) { animation-delay: -0.6s; }
+
+        @keyframes sk-chase-dot {
+          80%, 100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* 脉冲动画 */
+        @keyframes sk-pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.5; }
+          100% { opacity: 1; }
+        }
+
+        .sk-pulse {
+          width: 40px;
+          height: 40px;
+          background-color: var(--color-primary, #4a00ff);
+          border-radius: 50%;
+          animation: sk-pulse 1.5s infinite ease-in-out;
+        }
+
+        /* 波纹动画 */
+        @keyframes sk-ripple {
+          0% { transform: scale(0); opacity: 1; }
+          100% { transform: scale(1); opacity: 0; }
+        }
+
+        .sk-ripple {
+          width: 40px;
+          height: 40px;
+          position: relative;
+        }
+
+        .sk-ripple:before,
+        .sk-ripple:after {
+          content: '';
+          position: absolute;
+          border: 2px solid var(--color-primary, #4a00ff);
+          border-radius: 50%;
+          animation: sk-ripple 1.5s infinite;
+        }
+
+        .sk-ripple:after {
+          animation-delay: 0.5s;
+        }
+
+        /* 旋转方块 */
+        @keyframes sk-rotate {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .sk-rotate {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(74, 0, 255, 0.3);
+          border-top: 3px solid var(--color-primary, #4a00ff);
+          border-radius: 50%;
+          animation: sk-rotate 1.2s infinite linear;
+        }
+
+        /* 弹跳动画 */
+        @keyframes sk-bounce {
+          0%, 80%, 100% { transform: scale(0); }
+          10% { transform: scale(1.0); }
+          50% { transform: scale(1.0); }
+        }
+
+        .sk-bounce {
+          width: 40px;
+          height: 40px;
+          position: relative;
+        }
+
+        .sk-bounce:before,
+        .sk-bounce:after {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background-color: var(--color-primary, #4a00ff);
+          animation: sk-bounce 1.4s infinite ease-in-out both;
+        }
+
+        .sk-bounce:after {
+          animation-delay: -0.16s;
+        }
+
+        /* 波浪动画 */
+        @keyframes sk-wave {
+          0% { transform: rotate(0deg); }
+          10% { transform: rotate(14deg); }
+          20% { transform: rotate(-8deg); }
+          30% { transform: rotate(14deg); }
+          40% { transform: rotate(-4deg); }
+          50% { transform: rotate(10deg); }
+          60% { transform: rotate(0deg); }
+          100% { transform: rotate(0deg); }
+        }
+
+        .sk-wave {
+          width: 40px;
+          height: 40px;
+          position: relative;
+        }
+
+        .sk-wave:before,
+        .sk-wave:after {
+          content: '';
+          position: absolute;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background-color: var(--color-primary, #4a00ff);
+          animation: sk-wave 1.3s infinite ease-in-out;
+        }
+
+        .sk-wave:after {
+          animation-delay: -0.3s;
+        }
+
+        /* 方块网格动画 */
+        @keyframes sk-cube {
+          0%, 70%, 100% { transform: scale3D(1, 1, 1); }
+          35% { transform: scale3D(0, 0, 1); }
+        }
+
+        .sk-cube-grid {
+          width: 40px;
+          height: 40px;
+        }
+
+        .sk-cube-grid .sk-cube {
+          width: 33%;
+          height: 33%;
+          background-color: var(--color-primary, #4a00ff);
+          float: left;
+          animation: sk-cube 1.3s infinite ease-in-out;
+        }
+
+        .sk-cube-grid .sk-cube:nth-child(1) { animation-delay: 0.2s; }
+        .sk-cube-grid .sk-cube:nth-child(2) { animation-delay: 0.3s; }
+        .sk-cube-grid .sk-cube:nth-child(3) { animation-delay: 0.4s; }
+        .sk-cube-grid .sk-cube:nth-child(4) { animation-delay: 0.1s; }
+        .sk-cube-grid .sk-cube:nth-child(5) { animation-delay: 0.2s; }
+        .sk-cube-grid .sk-cube:nth-child(6) { animation-delay: 0.3s; }
+        .sk-cube-grid .sk-cube:nth-child(7) { animation-delay: 0.0s; }
+        .sk-cube-grid .sk-cube:nth-child(8) { animation-delay: 0.1s; }
+        .sk-cube-grid .sk-cube:nth-child(9) { animation-delay: 0.2s; }
         .libra-quick-btn {
             position: absolute; /* 绝对定位，脱离文档流，不影响父元素高度 */
             left: 100%; /* 位于父元素右侧 */
@@ -179,6 +378,37 @@
         #${CONFIG.modalId} .btn-close-large:hover {
             background-color: #d1d5db;
         }
+
+        /* 加载占位符样式 */
+        .modal-loading {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--libra-dynamic-bg);
+            z-index: 1;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: var(--color-primary, #4a00ff);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-content p {
+            margin: 20px 0 0 0;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
         #${CONFIG.modalId} iframe {
             width: 100%;
             height: 100%;
@@ -187,6 +417,50 @@
             opacity: 0;
             transition: opacity 0.3s;
         }
+
+
+
+        /* 标题链接视觉提示 */
+        .libra-title-link-quick-view {
+            cursor: pointer !important;
+        }
+
+        /* Toast通知样式 */
+        .libra-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            padding: 12px 20px;
+            background: var(--base-100, #fff);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid var(--color-primary, #4a00ff);
+            font-size: 14px;
+            color: var(--color-primary, #4a00ff);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .libra-toast.show {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .libra-toast.success {
+            border-left-color: #10b981;
+            color: #10b981;
+        }
+
+        .libra-toast.info {
+            border-left-color: var(--color-primary, #4a00ff);
+            color: var(--color-primary, #4a00ff);
+        }
     `;
     document.head.appendChild(style);
 
@@ -194,17 +468,29 @@
     function createModal() {
         if (document.getElementById(CONFIG.modalId)) return;
 
+        // 获取随机加载内容
+        const { animation, text } = getRandomLoadingContent();
+
         const modal = document.createElement('div');
         modal.id = CONFIG.modalId;
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
-                    <span class="modal-title">快速预览</span>
+                    <span class="modal-title">快速查看</span>
                     <div class="modal-actions">
                         <button class="btn-go-thread">进入帖子 ↗</button>
                         <button class="btn-close-large">关闭</button>
                     </div>
                 </div>
+
+                <!-- 加载占位符 -->
+                <div class="modal-loading" id="modal-loading">
+                    <div class="loading-content">
+                        ${animation.html}
+                        <p class="loading-text">${text}</p>
+                    </div>
+                </div>
+
                 <iframe id="${CONFIG.iframeId}" src=""></iframe>
             </div>
         `;
@@ -223,7 +509,7 @@
     function openModal(url, title) {
         createModal();
         const modal = document.getElementById(CONFIG.modalId);
-        
+
         // 动态获取网页背景色，解决变量未定义导致的透明问题
         let bg = window.getComputedStyle(document.body).backgroundColor;
         if (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') {
@@ -234,12 +520,24 @@
         const iframe = document.getElementById(CONFIG.iframeId);
         const titleEl = modal.querySelector('.modal-title');
         const goBtn = modal.querySelector('.btn-go-thread');
+        const loadingEl = document.getElementById('modal-loading');
 
-        iframe.style.backgroundColor = bg; // 防止加载时闪烁白色
-        iframe.style.opacity = '0'; // 初始隐藏，防止白屏和未净化内容的闪烁
-        
+        // 更新随机加载内容
+        if (loadingEl) {
+            const { animation, text } = getRandomLoadingContent();
+            const loadingContent = loadingEl.querySelector('.loading-content');
+            if (loadingContent) {
+                loadingContent.innerHTML = `${animation.html}<p class="loading-text">${text}</p>`;
+            }
+        }
+
+        // 显示加载占位符，隐藏iframe
+        if (loadingEl) loadingEl.style.display = 'flex';
+        iframe.style.backgroundColor = bg;
+        iframe.style.opacity = '0';
+
         iframe.src = url;
-        titleEl.textContent = title || '快速预览';
+        titleEl.textContent = title || '快速查看';
         
         // 绑定跳转事件
         goBtn.onclick = () => {
@@ -275,10 +573,12 @@
                 style.textContent = css;
                 doc.head.appendChild(style);
                 
-                // 样式注入完成后显示内容
+                // 样式注入完成后隐藏加载占位符并显示内容
+                if (loadingEl) loadingEl.style.display = 'none';
                 iframe.style.opacity = '1';
             } catch (e) {
-                // 出错也显示，避免死锁
+                // 出错也隐藏加载占位符并显示内容，避免死锁
+                if (loadingEl) loadingEl.style.display = 'none';
                 iframe.style.opacity = '1';
             }
         };
@@ -297,7 +597,7 @@
 
     // 主逻辑：尝试为单个 LI 元素添加按钮
     function processListItem(li) {
-        if (!li || li.dataset.libraQuickBtnAdded) return;
+        if (!li) return;
 
         // 查找这一行中的 time 元素
         const timeEl = li.querySelector('time');
@@ -308,13 +608,46 @@
 
         if (!titleLink || titleLink.tagName !== 'A') return;
 
-        // 标记为已添加
-        li.dataset.libraQuickBtnAdded = 'true';
-        li.classList.add('libra-post-item');
+        // 标记为已添加（如果还没有标记）
+        if (!li.dataset.libraQuickBtnAdded) {
+            li.dataset.libraQuickBtnAdded = 'true';
+            li.classList.add('libra-post-item');
+        }
 
-        // time 的父元素通常就是"标题下面一行"的容器 (meta row)
-        const parent = timeEl.parentElement; 
-        if (parent) {
+        // 总是更新设置相关的属性
+        if (Settings.clickTitleQuickView) {
+            // 添加视觉提示样式和title提示
+            titleLink.classList.add('libra-title-link-quick-view');
+            titleLink.title = '点击快速查看';
+
+            // 添加点击事件监听器（如果还没有添加）
+            if (!titleLink.dataset.libraClickAdded) {
+                titleLink.dataset.libraClickAdded = 'true';
+                titleLink.addEventListener('click', (e) => {
+                    // 首先检查当前设置状态
+                    if (!Settings.clickTitleQuickView) return; // 如果设置已禁用，不执行
+
+                    // 检查是否按下了Ctrl键（在新标签页打开）
+                    if (e.ctrlKey || e.metaKey) return; // 让浏览器处理新标签页打开
+
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openModal(titleLink.href, titleLink.textContent);
+                });
+            }
+        } else {
+            // 移除视觉提示和title提示
+            titleLink.classList.remove('libra-title-link-quick-view');
+            if (titleLink.title === '点击快速查看') {
+                titleLink.title = '';
+            }
+            // 注意：由于事件监听器是通过addEventListener添加的，我们无法直接移除
+            // 但在下次启用时会重新检查，所以这里不需要额外处理
+        }
+
+        // 添加快速查看按钮（如果还没有添加）
+        const parent = timeEl.parentElement;
+        if (parent && !parent.querySelector('.libra-quick-btn')) {
             parent.style.position = 'relative';
             const btn = document.createElement('button');
             btn.className = 'libra-quick-btn';
@@ -412,5 +745,165 @@
     window.addEventListener('scroll', throttledUpdater);
     window.addEventListener('resize', throttledUpdater);
     setTimeout(throttledUpdater, 500);
+
+    // --- 加载动画配置 ---
+
+    // 随机加载动画和文字
+    const loadingAnimations = [
+        {
+            class: 'sk-chase',
+            html: `
+                <div class="sk-chase">
+                    <div class="sk-chase-dot"></div>
+                    <div class="sk-chase-dot"></div>
+                    <div class="sk-chase-dot"></div>
+                    <div class="sk-chase-dot"></div>
+                    <div class="sk-chase-dot"></div>
+                    <div class="sk-chase-dot"></div>
+                </div>
+            `
+        },
+        {
+            class: 'sk-pulse',
+            html: '<div class="sk-pulse"></div>'
+        },
+        {
+            class: 'sk-ripple',
+            html: '<div class="sk-ripple"></div>'
+        },
+        {
+            class: 'sk-rotate',
+            html: '<div class="sk-rotate"></div>'
+        },
+        {
+            class: 'sk-bounce',
+            html: '<div class="sk-bounce"></div>'
+        },
+        {
+            class: 'sk-wave',
+            html: '<div class="sk-wave"></div>'
+        },
+        {
+            class: 'sk-cube-grid',
+            html: `
+                <div class="sk-cube-grid">
+                    <div class="sk-cube"></div>
+                    <div class="sk-cube"></div>
+                    <div class="sk-cube"></div>
+                    <div class="sk-cube"></div>
+                    <div class="sk-cube"></div>
+                    <div class="sk-cube"></div>
+                    <div class="sk-cube"></div>
+                    <div class="sk-cube"></div>
+                    <div class="sk-cube"></div>
+                </div>
+            `
+        }
+    ];
+
+    const loadingTexts = [
+        '正在加载精彩内容...',
+        '正在飞速加载中...',
+        '正在准备精彩内容...',
+        '正在组装像素魔法...',
+        '正在穿越网络的海洋...',
+        '正在召唤帖子的灵魂...',
+        '正在加载宇宙的奥秘...',
+        '正在点亮知识的火花...',
+        '正在编织信息的网络...',
+        '正在唤醒沉睡的数据...',
+        '正在绘制数字的画卷...',
+        '正在解码比特的秘密...',
+        '正在搭建内容的桥梁...',
+        '正在收集思维的碎片...'
+    ];
+
+    // 获取随机动画和文字
+    function getRandomLoadingContent() {
+        const animation = loadingAnimations[Math.floor(Math.random() * loadingAnimations.length)];
+        const text = loadingTexts[Math.floor(Math.random() * loadingTexts.length)];
+        return { animation, text };
+    }
+
+    // --- 设置功能 ---
+
+    // 显示toast通知
+    function showToast(message, type = 'info') {
+        // 移除现有的toast
+        const existingToast = document.querySelector('.libra-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        // 创建新的toast
+        const toast = document.createElement('div');
+        toast.className = `libra-toast ${type}`;
+        toast.textContent = message;
+
+        document.body.appendChild(toast);
+
+        // 强制重绘
+        toast.offsetHeight;
+
+        // 显示toast
+        toast.classList.add('show');
+
+        // 3秒后自动隐藏
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    // 全局扫描并处理所有帖子项
+    function processAllPostItems() {
+        // 找到所有包含time元素的li，这些就是帖子项
+        const timeElements = document.querySelectorAll('time');
+        timeElements.forEach(timeEl => {
+            const li = timeEl.closest('li');
+            if (li) {
+                processListItem(li);
+            }
+        });
+    }
+
+    // 创建配置描述
+    const configDesc = {
+        clickTitleQuickView: {
+            name: "点击帖子标题开启快速查看",
+            type: "bool",
+            value: false
+        }
+    };
+
+    // 注册配置
+    const config = new GM_config(configDesc, { immediate: true });
+
+    // 设置Settings对象使用GM_config
+    Settings = {
+        get clickTitleQuickView() {
+            return config.get('clickTitleQuickView');
+        },
+        set clickTitleQuickView(value) {
+            config.set('clickTitleQuickView', value);
+        }
+    };
+
+    // 监听配置变化，实时生效
+    config.addEventListener('set', (e) => {
+        const { prop, after } = e.detail;
+        if (prop === 'clickTitleQuickView') {
+            // 显示状态变化通知
+            const message = after ? '✅ 已启用：点击帖子标题开启快速查看' : '⬜ 已禁用：点击帖子标题开启快速查看';
+            showToast(message, after ? 'success' : 'info');
+
+            // 实时生效：重新处理所有帖子项
+            processAllPostItems();
+        }
+    });
 
 })();
