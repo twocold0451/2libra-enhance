@@ -232,7 +232,7 @@
             top: 50%;
             transform: translateY(-50%); /* 垂直居中 */
             white-space: nowrap;
-
+            
             padding: 2px 8px;
             font-size: 12px;
             cursor: pointer;
