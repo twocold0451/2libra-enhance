@@ -228,12 +228,11 @@
         .sk-cube-grid .sk-cube:nth-child(9) { animation-delay: 0.2s; }
         .libra-quick-btn {
             position: absolute; /* 绝对定位，脱离文档流，不影响父元素高度 */
-            left: 100%; /* 位于父元素右侧 */
+            right: 10px; /* 固定在右侧 */
             top: 50%;
             transform: translateY(-50%); /* 垂直居中 */
-            margin-left: 10px;
             white-space: nowrap;
-            
+
             padding: 2px 8px;
             font-size: 12px;
             cursor: pointer;
@@ -669,9 +668,8 @@
         }
 
         // 添加快速查看按钮（如果还没有添加）
-        const parent = timeEl.parentElement;
-        if (parent && !parent.querySelector('.libra-quick-btn')) {
-            parent.style.position = 'relative';
+        if (!li.querySelector('.libra-quick-btn')) {
+            li.style.position = 'relative';
             const btn = document.createElement('button');
             btn.className = 'libra-quick-btn';
             btn.textContent = CONFIG.btnText;
@@ -680,7 +678,7 @@
                 e.stopPropagation();
                 openModal(titleLink.href, titleLink.textContent);
             };
-            parent.appendChild(btn);
+            li.appendChild(btn);
         }
     }
 
