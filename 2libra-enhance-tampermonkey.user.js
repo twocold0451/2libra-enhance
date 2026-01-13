@@ -722,6 +722,17 @@
 
     // 主逻辑：尝试为单个 LI 元素添加按钮
     function processListItem(li) {
+
+        //如果设置了点击标题快速查看，则不添加按钮
+        if (Settings.clickTitleQuickView){
+            //如果已存在按钮，则移除 ,隐藏libra-quick-btn
+            const existingBtn = li.querySelector('.libra-quick-btn');
+            if (existingBtn) {
+                existingBtn.remove();
+            }
+            return;
+        }
+
         if (!li) return;
 
         // 查找这一行中的 time 元素
@@ -1022,7 +1033,7 @@
             try {
                 const doc = iframe.contentDocument;
                 const css = `
-                    header, .navbar, aside, footer, [role="banner"], [role="contentinfo"] { display: none !important; }
+                    header, .navbar, aside, [role="banner"], [role="contentinfo"] { display: none !important; }
                     .container { width: 100% !important; max-width: none !important; padding: 10px !important; }
                     main { margin-top: 0 !important; }
                     body { background: ${bg} !important; overflow-y: auto !important; }
@@ -1111,11 +1122,15 @@
         // 找到所有包含指定class的a标签，这些就是帖子项
         const postLinks = document.querySelectorAll('a.link.link-hover.leading-4');
         postLinks.forEach(postLink => {
-            updateTitleLinkStyle(postLink);
             const li = postLink.closest('li');
             if (li) {
                 processListItem(li);
             }
+        });
+        //找到所有 href 以 /post-flat开头的a标签
+        const postFlatLinks = document.querySelectorAll('a[href^="/post-flat"]');
+        postFlatLinks.forEach(postLink => {
+            updateTitleLinkStyle(postLink);
         });
     }
 
@@ -1218,5 +1233,14 @@
 
     // 启动所有初始化
     initializeNotificationQuickView();
+
+    // 初始化帖子标题快速查看
+    processAllPostItems();
+
+    // 持续监听新加载的帖子（针对SPA和动态加载）
+    const postListObserver = new MutationObserver(() => {
+        processAllPostItems();
+    });
+    postListObserver.observe(document.body, { childList: true, subtree: true });
 
 })();
