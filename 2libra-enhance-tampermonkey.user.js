@@ -542,13 +542,13 @@
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
 
-                iframe.onload = () => {
+        iframe.onload = () => {
             try {
                 const doc = iframe.contentDocument;
                 const css = `
                     header, .navbar, aside:not(.EmojiPickerReact), .menu:not(.dropdown-left), [role="banner"], [role="contentinfo"], footer.footer-center { display: none !important; }
                     div.breadcrumbs.text-sm.overflow-visible { display: none !important; }
-                    [data-main-left="true"], .flex-1 {
+                    [data-main-left="true"], .flex.w-full > .flex-1 {
                         position: fixed !important;
                         top: 0 !important;
                         left: 0 !important;
@@ -613,26 +613,9 @@
     }
 
 
-    // 主逻辑：尝试为单个 LI 元素添加按钮
-    function processListItem(li) {
-        if (!li) return;
-
-        // 查找这一行中的 time 元素
-        const timeEl = li.querySelector('time');
-        if (!timeEl) return;
-
-        // 查找帖子标题链接
-        const titleLink = timeEl.parentElement.parentElement.querySelector('a.link');
-        if (!titleLink || titleLink.tagName !== 'A') return;
-
-        // 查找元数据行 (标题下面的 div flex items-center gap-2)
-        const metaRow = timeEl.closest('.flex.items-center.gap-2');
-        if (!metaRow) return;
-
-        // 标记为已添加（如果还没有标记），用于CSS hover
-        if (!li.classList.contains('libra-post-item')) {
-            li.classList.add('libra-post-item');
-        }
+    // 更新标题链接样式和行为
+    function updateTitleLinkStyle(titleLink) {
+        if (!titleLink) return;
 
         // 总是更新设置相关的属性
         if (Settings.clickTitleQuickView) {
@@ -661,6 +644,28 @@
             if (titleLink.title === '点击快速查看') {
                 titleLink.title = '';
             }
+        }
+    }
+
+    // 主逻辑：尝试为单个 LI 元素添加按钮
+    function processListItem(li) {
+        if (!li) return;
+
+        // 查找这一行中的 time 元素
+        const timeEl = li.querySelector('time');
+        if (!timeEl) return;
+
+        // 查找帖子标题链接
+        const titleLink = timeEl.parentElement.parentElement.querySelector('a.link');
+        if (!titleLink || titleLink.tagName !== 'A') return;
+
+        // 查找元数据行 (标题下面的 div flex items-center gap-2)
+        const metaRow = timeEl.closest('.flex.items-center.gap-2');
+        if (!metaRow) return;
+
+        // 标记为已添加（如果还没有标记），用于CSS hover
+        if (!li.classList.contains('libra-post-item')) {
+            li.classList.add('libra-post-item');
         }
 
         let btn = li.querySelector('.libra-quick-btn');
@@ -907,10 +912,11 @@
 
     // 全局扫描并处理所有帖子项
     function processAllPostItems() {
-        // 找到所有包含time元素的li，这些就是帖子项
-        const timeElements = document.querySelectorAll('time');
-        timeElements.forEach(timeEl => {
-            const li = timeEl.closest('li');
+        // 找到所有包含指定class的a标签，这些就是帖子项
+        const postLinks = document.querySelectorAll('a.link.link-hover.leading-4');
+        postLinks.forEach(postLink => {
+            updateTitleLinkStyle(postLink);
+            const li = postLink.closest('li');
             if (li) {
                 processListItem(li);
             }
@@ -922,7 +928,7 @@
         clickTitleQuickView: {
             name: "点击帖子标题开启快速查看",
             type: "bool",
-            value: false
+            value: true
         }
     };
 
