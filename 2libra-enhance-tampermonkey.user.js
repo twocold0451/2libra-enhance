@@ -966,6 +966,7 @@
                         <button class="btn-close">关闭</button>
                     </div>
                 </div>
+                <div class="libra-modal-loading" id="notifications-modal-loading"></div>
                 <iframe src=""></iframe>
             </div>
         `;
@@ -997,8 +998,21 @@
         modal.style.setProperty('--libra-dynamic-bg', bg);
 
         const iframe = modal.querySelector('iframe');
+        const loading = modal.querySelector('#notifications-modal-loading');
+
         iframe.style.background = bg;
         iframe.style.opacity = '0';
+
+        // 显示加载动画
+        const { animation, text } = getRandomLoadingContent();
+        loading.innerHTML = `
+            <div class="loading-content">
+                ${animation.html}
+                <p class="loading-text">${text}</p>
+            </div>
+        `;
+        loading.style.display = 'flex';
+
         iframe.src = url;
 
         modal.classList.add('active');
@@ -1037,9 +1051,12 @@
                 const observer = new MutationObserver(hideWorkNodeList);
                 observer.observe(doc.body, { childList: true, subtree: true });
 
+                // 隐藏加载动画，显示iframe
                 iframe.style.opacity = '1';
+                loading.style.display = 'none';
             } catch (e) {
                 iframe.style.opacity = '1';
+                loading.style.display = 'none';
             }
         };
     }
