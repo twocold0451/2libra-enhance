@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         2libra-enhance
 // @namespace    http://tampermonkey.net/
-// @version      1.6.1
+// @version      1.6.2
 // @description  2libra.com 论坛增强：帖子快速查看、智能返回顶部
 // @author       twocold0451
 // @homepage     https://github.com/twocold0451/2libra-enhance
@@ -606,7 +606,7 @@
 
         iframe.src = url;
         titleEl.textContent = title || '快速查看';
-        
+
         // 绑定跳转事件
         goBtn.onclick = () => {
             window.location.href = url;
@@ -1039,6 +1039,7 @@
                     body { background: ${bg} !important; overflow-y: auto !important; }
                     [data-right-sidebar="true"]{display: none !important;}
                     .breadcrumbs{ display: none !important; }
+                    .footer-horizontal{ display: none !important; }
                 `;
                 const style = doc.createElement('style');
                 style.textContent = css;
