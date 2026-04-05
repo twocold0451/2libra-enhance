@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html style="overflow: hidden;">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        html, body { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            width: 480px; 
+            height: 600px; 
+            overflow: hidden !important; 
+            background: #fff;
+        }
+        
+        #forummate-settings-modal {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: transparent !important;
+            display: flex !important;
+            flex-direction: column !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            z-index: 1 !important;
+            padding: 0 !important;
+        }
+        
+        #forummate-settings-modal .settings-panel {
+            width: 100% !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            margin: 0 !important;
+        }
+
+        #forummate-settings-modal .settings-body {
+            flex: 1 !important;
+            overflow-y: auto !important;
+            padding: 12px 16px 24px 16px !important;
+        }
+
+        #forummate-settings-modal .settings-header {
+            padding: 12px 16px !important;
+        }
+
+        #forummate-settings-modal .btn-close-settings {
+            display: none !important;
+        }
+        
+        #forummate-settings-modal .settings-footer {
+            margin-top: auto !important;
+            background: #f9fafb !important;
+            border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+            padding: 10px 16px !important;
+        }
+    </style>
+</head>
+<body style="overflow: hidden;">
+    <script src="content.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

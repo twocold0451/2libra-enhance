@@ -1,0 +1,10 @@
+{
+  "name": "forummate",
+  "version": "1.10.2",
+  "description": "ForumMate 论坛增强助手",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "author": "twocold0451",
+  "license": "MIT"
+}

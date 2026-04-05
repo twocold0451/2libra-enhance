@@ -1,44 +1,53 @@
-// ==UserScript==
-// @name         ForumMate 论坛增强助手
-// @namespace    http://tampermonkey.net/
-// @version      1.10.2
-// @description  ForumMate 论坛增强助手：当前支持 2libra.com、middlefun.com、v2ex.com、linux.do 的帖子快速查看与筛选
-// @author       twocold0451
-// @homepage     https://github.com/twocold0451/forum-mate
-// @supportURL   https://github.com/twocold0451/forum-mate/issues
-// @match        https://*.2libra.com/*
-// @match        https://*.middlefun.com/*
-// @match        https://*.v2ex.com/*
-// @match        https://linux.do/*
-// @match        https://*.linux.do/*
-// @license MIT
-// @grant        GM_registerMenuCommand
-// @grant        GM_getValue
-// @grant        GM_setValue
-// ==/UserScript==
+// --- Extension Adapter ---
+const _extensionStorageCache = {};
 
-// --- Tampermonkey Adapter ---
 const ForumMateAdapter = {
     getValue: (key, defaultValue) => {
-        if (typeof GM_getValue !== 'undefined') {
-            return GM_getValue(key, defaultValue);
+        if (Object.prototype.hasOwnProperty.call(_extensionStorageCache, key)) {
+            return _extensionStorageCache[key];
         }
         return defaultValue;
     },
     setValue: (key, value) => {
-        if (typeof GM_setValue !== 'undefined') {
-            GM_setValue(key, value);
-        }
+        _extensionStorageCache[key] = value;
+        chrome.storage.local.set({ [key]: value });
     },
     registerMenuCommand: (name, fn) => {
-        if (typeof GM_registerMenuCommand !== 'undefined') {
-            GM_registerMenuCommand(name, fn);
+        // In the extension, we can expose a way to trigger the menu.
+        // For example, by listening to messages from the background script or a popup.
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+            if (request.action === 'open_settings') {
+                fn();
+            }
+        });
+    },
+    
+    // Asynchronous initialization for extension
+    _init: async function(callback) {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+            chrome.storage.local.get(null, (data) => {
+                Object.assign(_extensionStorageCache, data);
+                callback();
+            });
+
+            // Listen for changes from other contexts (e.g., popup changing settings)
+            chrome.storage.onChanged.addListener((changes, areaName) => {
+                if (areaName !== 'local') return;
+                for (let key in changes) {
+                    _extensionStorageCache[key] = changes[key].newValue;
+                    if (typeof window.onForumMateSettingChanged === 'function') {
+                        window.onForumMateSettingChanged(key, changes[key].newValue);
+                    }
+                }
+            });
+        } else {
+            callback();
         }
     }
 };
 
 
-(function() {
+ForumMateAdapter._init(function() {
     'use strict';
 
     // Initialization log
@@ -3042,7 +3051,7 @@ function removeListItemQuickButton(li) {
     }
 
 
-    function openSettingsModal(forcedHostname) {
+    window.openForumMateSettings = openSettingsModal; function openSettingsModal(forcedHostname) {
         createSettingsModal();
         const modal = document.getElementById(CONFIG.settingsModalId);
         const currentSiteConfig = getCurrentSiteConfig(forcedHostname) || getSiteConfigByKey('2libra');
