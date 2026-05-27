@@ -26,7 +26,7 @@ ForumMate 是一个面向论坛场景的浏览器辅助工具。当前已支持 
 适用于 Microsoft Edge 以及其他兼容 Manifest V3 的 Chromium 浏览器。
 
 #### Edge 商店安装
-- 如已上架，可优先通过官方 Edge 商店页面安装。
+- https://microsoftedge.microsoft.com/addons/detail/jebnibpkpbfejnigfbajnlciaecdbjfi
 
 #### 本地手动加载
 1. 克隆或下载本仓库。
