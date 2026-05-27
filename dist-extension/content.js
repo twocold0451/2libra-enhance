@@ -1352,10 +1352,18 @@ ForumMateAdapter._init(function() {
         }
 
         // Fallback for compatible sites without [data-main-left="true"] (e.g. middlefun)
-        doc.documentElement.style.setProperty('overflow-y', 'auto', 'important');
-        doc.documentElement.style.setProperty('overflow-x', 'hidden', 'important');
-        doc.body.style.setProperty('overflow-y', 'auto', 'important');
-        doc.body.style.setProperty('overflow-x', 'hidden', 'important');
+        const fallbackContent = doc.querySelector('main, [role="main"], .container');
+        if (fallbackContent) {
+            doc.documentElement.style.setProperty('overflow', 'hidden', 'important');
+            doc.body.style.setProperty('overflow', 'hidden', 'important');
+            fallbackContent.style.setProperty('overflow-y', 'auto', 'important');
+            fallbackContent.style.setProperty('overflow-x', 'hidden', 'important');
+        } else {
+            doc.documentElement.style.setProperty('overflow-y', 'auto', 'important');
+            doc.documentElement.style.setProperty('overflow-x', 'hidden', 'important');
+            doc.body.style.setProperty('overflow-y', 'auto', 'important');
+            doc.body.style.setProperty('overflow-x', 'hidden', 'important');
+        }
     }
     function bindEscapeKeyForIframe(iframe, closeHandler) {
         if (!iframe || typeof closeHandler !== 'function') return;
