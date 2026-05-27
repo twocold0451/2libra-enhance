@@ -29,6 +29,7 @@ let extCore = compiledCoreSrc;
 // Export openSettingsModal to window for popup access
 extCore = extCore.replace('function openSettingsModal(forcedHostname)', 'window.openForumMateSettings = openSettingsModal; function openSettingsModal(forcedHostname)');
 extCore = extCore.replace(/\(function\s*\(\)\s*\{/, 'ForumMateAdapter._init(function() {');
+extCore = extCore.replace(/\}\)\(\);\s*$/, '});');
 const extOutput = `${extAdapterSrc}\n\n${extCore}`;
 fs.writeFileSync(path.join('dist-extension', 'content.js'), extOutput, 'utf-8');
 console.log('✅ Built dist-extension/content.js');
@@ -51,7 +52,7 @@ console.log('✅ Copied dist-extension/icons assets');
 const manifest = {
     "manifest_version": 3,
     "name": "ForumMate 论坛增强助手",
-    "version": "1.10.2",
+    "version": "1.10.3",
     "description": "面向论坛场景的浏览器辅助工具，支持 2libra.com、middlefun.com、v2ex.com 与 linux.do。",
     "icons": {
         "16": "icons/forummate-icon-16.png",

@@ -1709,6 +1709,7 @@ ForumMateAdapter._init(function() {
             [role="contentinfo"] {
                 display: none !important;
             }
+            body, html { overflow-y: auto !important; overflow-x: hidden !important; }
         `;
     }
 
@@ -3289,4 +3290,4 @@ function removeListItemQuickButton(li) {
     });
     postListObserver.observe(document.body, { childList: true, subtree: true });
 
-})();
+});

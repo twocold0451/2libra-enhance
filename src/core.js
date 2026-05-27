@@ -1660,6 +1660,7 @@
             [role="contentinfo"] {
                 display: none !important;
             }
+            body, html { overflow-y: auto !important; overflow-x: hidden !important; }
         `;
     }
 
